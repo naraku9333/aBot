@@ -9,30 +9,22 @@
 //
 
 
-//#include "Bot.hpp"
-//
-//int main()
-//{
-//	sv::Bot bot("aBot", "irc.freenode.net", "6667");
-//	bot.connect();
-//	bot.join("#ecc_comp_sci");
-//	bot.listen();
-//}
-#include <iostream>
-using namespace std;
+#include "Bot.hpp"
 
-int main()
+int main(int argc, char* argv[])
 {
-    cout << "Enter\n";
-    char s[20];
-    cin.get(s, 10);
-    char c = cin.peek();
-    cout << c << '\n';
-    cout << "The state is " << cin.rdstate() << '\n';
-    cin.ignore(11, '\n');
-    cout << "The state is " << cin.rdstate() << '\n';
-    char e = cin.peek();
-    cout << "The state is " << cin.rdstate() << '\n';
-    cout << e <<'\n';
-    return 0;
+	if(argc >= 3)		
+	{
+		std::string port = (argc >= 5) ? argv[4] : "6667";
+				
+		sv::Bot bot(argv[1], argv[2], port);
+		bot.connect();
+
+		std::string channel = (argc >= 4) ? argv[3] : "##c++";
+		bot.join(channel);
+
+		bot.listen();
+	}
+	else
+		std::cout << "USAGE:\nRun with:  abot <nick> <server> <channel>optional <port>optional" << std::endl;
 }
