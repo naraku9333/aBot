@@ -2,7 +2,7 @@ aBot
 ====
 
 An IRC bot to be entered into a cplusplus.com monthly 
-community competition http://cppcomp.netne.net/showthread.php?tid=4
+[community competition] (http://cppcomp.netne.net/showthread.php?tid=4)
 
 ####Dependencies:
 
@@ -35,3 +35,5 @@ community competition http://cppcomp.netne.net/showthread.php?tid=4
 
 - [ ] Logging does not handle redirects (logs list intended channel not the acctual channel)
  
+####Thanks:
+To [Thumperrr](https://github.com/Thumperrr) for the use of his regex (and his idea of encapsulating irc messages)
