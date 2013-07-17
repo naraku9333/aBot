@@ -7,7 +7,7 @@ community competition http://cppcomp.netne.net/showthread.php?tid=4
 ####Dependencies:
 
     - C++11
-    - Boost version 1.35.0 or later. 
+    - Boost version 1.35.0 or later http://www.boost.org/
     
 
 ####Planned features:
@@ -20,11 +20,12 @@ community competition http://cppcomp.netne.net/showthread.php?tid=4
 - [ ] Automatically reconnect to server and channel
 - [ ] receive commands from channel and privmsg
 - [ ] results sent same manner as received (ie: if command from privmsg answer should be a privmsg)
-- [ ] implement lastseen [username] --get date + time last time [username] logged on
-- [ ] implement !saywha? [username] [numposts] --show [usernames]'s last [numposts] messages
+- [ ] implement command !lastseen [username] --get date + time last time [username] logged on
 - [ ] implement command !tell [username] [message] --send [message] to [username] when they log back in
-- [ ] OPTIONAL implement !weather [zip] --display basic weather info
-- [ ] OPTIONAL implement cowsay http://en.wikipedia.org/wiki/Cowsay --display a cow saying a fortune
+- [ ] implement command !quit -- quits current channel
+- [ ] implement command !join [channel] --joins channel
+- [ ] OPTIONAL implement command !weather [zip] --display basic weather info
+- [ ] OPTIONAL implement command !cowsay --display a cow saying a fortune  http://en.wikipedia.org/wiki/Cowsay
 
 
 ####Building:
