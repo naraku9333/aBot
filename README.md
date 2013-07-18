@@ -18,7 +18,7 @@ An IRC bot to be entered into a cplusplus.com monthly
     - [x] Write multiple logs, numbered ie: chatlog_<simple_date>.txt
 - [x] Keep user log (users who enter channel) and keep list of join+part combos --Not currently written to disk
 - [ ] Automatically reconnect to server and channel
-- [ ] receive commands from channel and privmsg
+- [x] receive commands from channel and privmsg
 - [ ] results sent same manner as received (ie: if command from privmsg answer should be a privmsg)
 - [ ] implement command !lastseen [username] --get date + time last time [username] logged on
 - [x] implement command !tell [public|private] [user] [message] --send [message] to [username] when they log back in, 
