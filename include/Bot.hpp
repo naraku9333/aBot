@@ -4,7 +4,9 @@
 #include <string>
 #include <boost/asio.hpp>
 #include <map>
-#include "Message.hpp"
+#include <tuple>
+#include <list>
+//#include "Message.hpp"
 
 namespace sv
 {
@@ -18,12 +20,14 @@ namespace sv
 		void send(const std::string&);
 		std::string receive();
 		void join(const std::string&);
+		void quit();
 		void listen();
 		void handler(const std::string&);
 
 	private:
 		void save_log();
-		sv::Message parse_message(const std::string&);//TODO
+		void help();
+		//sv::Message parse_message(const std::string&);//TODO
 		Bot() : io(), sock(io){}
 		Bot(const Bot&) : io(), sock(io){}
 
@@ -38,10 +42,13 @@ namespace sv
 
 		std::vector<std::string> chat_log;
 
-		typedef std::pair<std::string, std::string> session;
-
+		typedef std::pair<std::string, std::string> strpair;
+		typedef std::tuple<std::string, std::string, bool> relay_data;
 		//user last seen <user, list<join date+time, part date+time>>
-		std::map< std::string, std::list<session>> user_log;
+		std::map< std::string, std::list<strpair>> user_log;
+		//<user, list<sender, msg>>
+		std::map< std::string, std::list<relay_data>> msg_relay;
+
 		static const int MAX_LOG_FILES = 10;
 		static const int MAX_LOG_LENGTH = 100;
 	};	
