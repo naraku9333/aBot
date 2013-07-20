@@ -4,7 +4,7 @@
 #include <array>
 #include <thread>
 #include <chrono>
-#include <regex>
+#include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 #include <map>
 #include <boost/date_time/gregorian/gregorian.hpp>
@@ -99,10 +99,10 @@ void sv::Bot::handler(const std::string& msg)
 {
 	//std::cout << msg << std::endl;
 
-	static const std::regex regex("^(:(\\S+ ))?(\\S+ )((?!:).+?)?(:(.+))?(\r\n)?$");
-    std::smatch match;
+	static const boost::regex regex("^(:(\\S+ ))?(\\S+ )((?!:).+?)?(:(.+))?(\r\n)?$");
+    boost::smatch match;
 	std::string sender, command, params, data;
-    if(std::regex_match(msg, match, regex))
+    if(boost::regex_match(msg, match, regex))
     {
         sender  = match[2];
 		sender = (sender.find('!') != std::string::npos) ? 
