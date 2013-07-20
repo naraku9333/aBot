@@ -57,7 +57,7 @@ std::string sv::Bot::receive()
 	size_t len = sock.read_some(boost::asio::buffer(&buf, 256), error);
 
 	if (error == boost::asio::error::eof)
-		throw  std::exception("Connection closed cleanly by peer.");
+		throw "Connection closed cleanly by peer.";
 	else if (error)
 			throw boost::system::system_error(error); 
 
