@@ -29,9 +29,19 @@ An IRC bot to be entered into a cplusplus.com monthly
 - [ ] OPTIONAL implement command !weather [zip] --display basic weather info
 - [ ] OPTIONAL implement command !cowsay --display a cow saying a fortune  http://en.wikipedia.org/wiki/Cowsay
 
+####Usage:
+    abot <nick> <server> <channel>optional <port>optional
+    EX: >aBot abot_9333 "irc.freenode.net" "#chessplusplus" "6667"
+
 
 ####Building:
-
+Tested with:
+- Visual Studio 2012:
+    - Create new project from existing source
+- GCC compile with:
+    - g++ -std=c++11 -Iinclude src/Bot.cpp src/main.cpp -lboost_system -lboost_filesystem -lboost_date_time
+- MinGW compile with:
+    - g++ -std=c++11 -Iinclude src/Bot.cpp src/main.cpp -lWs2_32 -lboost_system -lboost_filesystem -lboost_date_time
 
 ####Issues:
 
