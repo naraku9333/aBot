@@ -2,11 +2,11 @@
 #define SV_BOT_HPP
 
 #include <string>
-#include <boost/asio.hpp>
 #include <map>
 #include <tuple>
 #include <list>
-//#include "Message.hpp"
+#include "Message.hpp"
+#include "Connection.hpp"
 
 namespace sv
 {
@@ -17,40 +17,42 @@ namespace sv
 		~Bot();
 
 		void connect();
-		void send(const std::string&);
-		std::string receive();
 		void join(const std::string&);
 		void quit();
 		void listen();
-		void handler(const std::string&);
 
 	private:
+		void handler(Message&);
+		void send(const std::string&);
+		std::string receive();
 		void save_log();
 		void help();
-		//sv::Message parse_message(const std::string&);//TODO
-		Bot() : io(), sock(io){}
-		Bot(const Bot&) : io(), sock(io){}
+		void handle_bot_commands(Message&);
+		void check_messages(const std::string&);
+
+		//workaround for VS
+		Bot() : connection("","")/*= delete*/{}
+		Bot(const Bot&) : connection("","")/*= delete*/{}
 
 		std::string nick,
-			server,
-			port,
 			channel;
-
-		boost::asio::io_service io;
-		boost::asio::ip::tcp::socket sock;
-		boost::system::error_code error;
+		Connection connection;
+		bool exit;
 
 		std::vector<std::string> chat_log;
 
 		typedef std::pair<std::string, std::string> strpair;
-		typedef std::tuple<std::string, std::string, bool> relay_data;
+
 		//user last seen <user, list<join date+time, part date+time>>
 		std::map< std::string, std::list<strpair>> user_log;
+
 		//<user, list<sender, msg>>
-		std::map< std::string, std::list<relay_data>> msg_relay;
+		std::map< std::string, std::list
+			<std::tuple<std::string, std::string, bool>>> 
+			msg_relay;
 
 		static const int MAX_LOG_FILES = 10;
-		static const int MAX_LOG_LENGTH = 100;
+		static const int MAX_LOG_LENGTH = 3;
 	};	
 };
 #endif

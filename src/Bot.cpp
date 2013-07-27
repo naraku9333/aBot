@@ -2,18 +2,27 @@
 #include <cstdlib>
 #include <iostream>
 #include <array>
-#include <thread>
 #include <chrono>
-#include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
 #include <map>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <fstream>
 #include <sstream>
+#include "Message.hpp"
 
-sv::Bot::Bot(const std::string& n, const std::string& s, 
-			 const std::string& p = std::string("6667"))
-	: nick(n), server(s), port(p), io(), sock(io)
+namespace sv
+{
+	std::string time_string()
+	{
+		std::chrono::system_clock::time_point n = std::chrono::system_clock::now();
+		time_t t(std::chrono::system_clock::to_time_t(n));
+		std::string s(ctime(&t));
+		return s.substr(0, s.length() - 3);//remove trailing crlf
+	}
+}
+
+sv::Bot::Bot(const std::string& n, const std::string& s, const std::string& p = std::string("6667"))
+	: nick(n), connection(s,p), exit(false)
 {
 	
 }
@@ -25,43 +34,21 @@ sv::Bot::~Bot()
 }
 
 void sv::Bot::connect()
-{
-	try
-	{
-		boost::asio::ip::tcp::resolver resolver(io);
-		boost::asio::ip::tcp::resolver::query query(server, port);
-		boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query);
+{	
+	connection.connect();
 
-		boost::asio::connect(sock, it);
-
-		send("NICK " + nick);
-		send("USER guest 0 * :Ima Robot");
-	}
-	catch(std::exception& e)
-	{
-		std::cerr << e.what() << std::endl;
-	}
-	int count = 0;
+	send("NICK " + nick);
+	send("USER guest 0 * :Ima Robot");	
 }
 
 void sv::Bot::send(const std::string& msg)
 {
-	if(!msg.empty())
-		sock.send(boost::asio::buffer(msg + "\r\n"));
+	connection.send(msg);
 }
 
 std::string sv::Bot::receive()
 {
-	std::array<char, 256> buf;
-
-	size_t len = sock.read_some(boost::asio::buffer(&buf, 256), error);
-
-	if (error == boost::asio::error::eof)
-		throw "Connection closed cleanly by peer.";
-	else if (error)
-			throw boost::system::system_error(error); 
-
-	return std::string(buf.begin(), buf.begin() + len);	
+	return connection.receive();
 }
 
 void sv::Bot::join(const std::string& chan)
@@ -83,7 +70,7 @@ void sv::Bot::quit()
 
 void sv::Bot::listen()
 {	
-	while(true)
+	while(!exit)
 	{
 		std::string s = receive();
 
@@ -91,119 +78,49 @@ void sv::Bot::listen()
 			send("PONG");
 
 		else
-			handler(s);	
+			handler(Message(s));	
 	}	
 }
 
-void sv::Bot::handler(const std::string& msg)
+void sv::Bot::handler(Message& msg)
 {
-	//std::cout << msg << std::endl;
+	if(msg.sender != "SERVER")
+	{
+		strpair s;
 
-	static const boost::regex regex("^(:(\\S+ ))?(\\S+ )((?!:).+?)?(:(.+))?(\r\n)?$");
-    boost::smatch match;
-	std::string sender, command, params, data;
-    if(boost::regex_match(msg, match, regex))
-    {
-        sender  = match[2];
-		sender = (sender.find('!') != std::string::npos) ? 
-				sender.substr(0, sender.find('!')) ://I dont want host info
-				"SERVER";
-		
-        command = match[3];
-		if(command.size() > 0) command.pop_back();
-        params  = match[4];
-        data    = match[6];
-		
-		if(sender != "SERVER")
+		std::string now = time_string();
+		std::string newmsg = now + "\t<" + msg.sender +">";
+
+		if(msg.command == "JOIN")
 		{
-			strpair s;
-
-			std::chrono::system_clock::time_point n = std::chrono::system_clock::now();
-			time_t t(std::chrono::system_clock::to_time_t(n));
-			std::string now = ctime(&t);
-			now = now.substr(0, now.length() - 3);//remove trailing crlf
-
-			std::string newmsg = now + "\t<" + sender +">";
-
-			if(command == "JOIN")
-			{
-				s.first = now;
-				user_log[sender].push_back(s);
- 				newmsg += " has joined " + channel;
-
-				if(msg_relay.find(sender) != msg_relay.end())
-				{
-					if(!msg_relay[sender].empty())
-					{
-						for(const auto& a : msg_relay[sender])
-						{
-							if(std::get<2>(a))
-								send("PRIVMSG " + sender + " :While you were out " + std::get<0>(a) +" said: " + std::get<1>(a));
-							else
-								send("PRIVMSG " + channel + " :@" + sender + " While you were out " + std::get<0>(a) +" said: " + std::get<1>(a));
-							
-						}
-						msg_relay[sender].clear();
-					}
-				}
-			}
-			else if(command == "PART" || command == "QUIT")
-			{
-				if(user_log.find(sender) != user_log.end() && !user_log[sender].empty())
-					user_log[sender].back().second = now;
+			s.first = now;
+			user_log[msg.sender].push_back(s);
+ 			newmsg += " has joined " + channel;
+			check_messages(msg.sender);
+		}
+		else if(msg.command == "PART" || msg.command == "QUIT")
+		{
+			if(user_log.find(msg.sender) != user_log.end() && !user_log[msg.sender].empty())
+				user_log[msg.sender].back().second = now;
 			
-				newmsg += " has quit " + channel;
-			}
-			if(command == "PRIVMSG")
-			{
-				std::vector<std::string> botcommands;
-				std::stringstream ss(data);
-				std::string  tempstr;
-				while(ss >> tempstr)
-					botcommands.push_back(tempstr);
-
-				if(botcommands[0] == "!quit")
-					send("PART " + channel);
-
-				else if(botcommands[0] == "!join" && botcommands.size() > 1)
-				{
-					quit();
-					join(botcommands[1]);
-				}
-				else if(botcommands[0] == "!tell" && botcommands.size() > 3)
-				{
-					std::string temp;//(botcommands.size(),0);
-					std::for_each(botcommands.begin() + 3, botcommands.end(),[&](std::string s){temp += " " + s;});
-					bool b = false;
-					if(botcommands[1] == "private")
-						b = true;
-					msg_relay[botcommands[2]].push_back(std::make_tuple(sender, temp, b));
-				}
-				else if(botcommands[0] == "!help")
-				{
-					send("PRIVMSG " + channel + " :aBot - An IRC bot to be entered into a cplusplus.com monthly community"
-						+ " competition http://cppcomp.netne.net/showthread.php?tid=4");
-					send("PRIVMSG " + channel + " :-- !join <channel>  join the specified channel");
-					send("PRIVMSG " + channel + " :-- !quit  quit current channel\n");
-					send("PRIVMSG " + channel + " :-- !tell <private|public> <nick> <message>  Send <message> to <nick> in channel if "
-						 + "public or via privmsg if private.");
-				}
-			}
-			if(user_log[sender].size() > MAX_LOG_FILES)
-				user_log[sender].pop_front();
+			newmsg += " has quit " + channel;
+		}
+		if(msg.command == "PRIVMSG")
+		{
+			handle_bot_commands(msg);
+		}
+		if(user_log[msg.sender].size() > MAX_LOG_FILES)
+			user_log[msg.sender].pop_front();
 			
-			newmsg += "\t" + data;
-			std::cout << newmsg << std::endl;
-			chat_log.push_back(newmsg);
+		newmsg += "  " + msg.data;
+		std::cout << newmsg << std::endl;
+		chat_log.push_back(newmsg);
 
-			if(chat_log.size() >= MAX_LOG_LENGTH)
-			{
-				save_log();
-			}
+		if(chat_log.size() >= MAX_LOG_LENGTH)
+		{
+			save_log();
 		}
 	}
-    else //throw std::runtime_error("Unable to match IRC message to regular expression.");
-		std::cout << msg << std::endl;//probably a server message
 }
 
 void sv::Bot::save_log()
@@ -246,4 +163,70 @@ void sv::Bot::save_log()
 		of << a << std::endl;
 
 	chat_log.clear();
+}
+
+void sv::Bot::help()
+{
+	send("PRIVMSG " + channel + " :aBot - An IRC bot to be entered into a cplusplus.com monthly community"
+		+ " competition http://cppcomp.netne.net/showthread.php?tid=4");
+	send("PRIVMSG " + channel + " :-- !join <channel>  join the specified channel");
+	send("PRIVMSG " + channel + " :-- !quit  quit current channel\n");
+	send("PRIVMSG " + channel + " :-- !exit  shutdown " + nick + "\n");
+	send("PRIVMSG " + channel + " :-- !tell <private|public> <nick> <message>  Send <message> to <nick> in channel if "
+			+ "public or via privmsg if private.");
+}
+
+void sv::Bot::handle_bot_commands(Message& com)
+{	
+	std::vector<std::string> v = com.command_params();
+
+	if(com.find_command(std::string(("!quit"))))
+	{
+		send("PART " + channel);
+		channel.clear();
+	}
+	else if(com.find_command(std::string("!join")) && v.size() > 0)
+	{
+		
+		if(!channel.empty())
+			quit();
+		join(v[0]);
+		
+	}
+	else if(com.find_command(std::string("!tell")) && v.size() > 2)
+	{
+		std::string temp;//(botcommands.size(),0);
+		std::for_each(v.begin() + 2, v.end(),[&](std::string s){temp += " " + s;});
+		bool b = false;
+		if(v[0] == "private")
+			b = true;
+		msg_relay[v[1]].push_back(std::make_tuple(com.sender, temp, b));
+	}
+	else if(com.find_command(std::string("!help")))
+	{
+		help();
+	}
+	else if(com.find_command(std::string(("!exit"))))
+	{
+		exit = true;
+	}
+}
+
+void sv::Bot::check_messages(const std::string& user)
+{
+	if(msg_relay.find(user) != msg_relay.end())
+	{
+		if(!msg_relay[user].empty())
+		{
+			for(const auto& a : msg_relay[user])
+			{
+				if(std::get<2>(a))
+					send("PRIVMSG " + user + " :While you were out " + std::get<0>(a) +" said: " + std::get<1>(a));
+				else
+					send("PRIVMSG " + channel + " :@" + user + " While you were out " + std::get<0>(a) +" said: " + std::get<1>(a));
+							
+			}
+			msg_relay[user].clear();
+		}
+	}
 }

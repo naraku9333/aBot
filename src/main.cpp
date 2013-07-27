@@ -11,20 +11,32 @@
 
 #include "Bot.hpp"
 #include <iostream>
+#include <boost/thread.hpp>
 
 int main(int argc, char* argv[])
 {
 	if(argc >= 3)		
 	{
-		std::string port = (argc >= 5) ? argv[4] : "6667";
-				
-		sv::Bot bot(argv[1], argv[2], port);
-		bot.connect();
-
 		std::string channel = (argc >= 4) ? argv[3] : "##c++";
-		bot.join(channel);
+		std::string port = (argc >= 5) ? argv[4] : "6667";
+		
+		sv::Bot bot(argv[1], argv[2], port);
+		bool connected(false);
+		//while(!connected)
+		{
+			try
+			{
+				bot.connect();
+				bot.join(channel);
+				bot.listen();
+			}catch(std::exception& e)
+			{
+				std::cout << e.what() << std::endl;
+				/*std::cout << "Connection failed, attempting again in 5 seconds" << std::endl;
+				boost::this_thread::sleep_for(boost::chrono::seconds(5));*/
+			}
 
-		bot.listen();
+		}	
 	}
 	else
 		std::cout << "USAGE:\nRun with:  abot <nick> <server> <channel>optional <port>optional" << std::endl;
