@@ -26,6 +26,7 @@ An IRC bot to be entered into a cplusplus.com monthly
 - [x] implement command !quit -- quits current channel
 - [x] implement command !join [channel] --quits current channel and joins specified channel
 - [x] implement command !help --print help message to channel
+- [x] implement command !exit -- shutsdown client after saving chat log data (if any) to disk
 - [ ] OPTIONAL implement command !weather [zip] --display basic weather info
 - [ ] OPTIONAL implement command !cowsay --display a cow saying a fortune  http://en.wikipedia.org/wiki/Cowsay
 
