@@ -1,13 +1,12 @@
 #include "Bot.hpp"
-#include <cstdlib>
 #include <iostream>
-#include <array>
 #include <chrono>
 #include <boost/filesystem.hpp>
 #include <map>
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 #include <fstream>
-#include <sstream>
 #include "Message.hpp"
 
 namespace sv
@@ -174,6 +173,8 @@ void sv::Bot::help()
 	send("PRIVMSG " + channel + " :-- !exit  shutdown " + nick + "\n");
 	send("PRIVMSG " + channel + " :-- !tell <private|public> <nick> <message>  Send <message> to <nick> in channel if "
 			+ "public or via privmsg if private.");
+	if(!api_key.empty())
+		send("PRIVMSG " + channel + " :-- !weather <zip> | <city> <state|province|country *2 letter abbreviation> get current weather conditions");
 }
 
 void sv::Bot::handle_bot_commands(Message& com)
@@ -210,6 +211,11 @@ void sv::Bot::handle_bot_commands(Message& com)
 	{
 		exit = true;
 	}
+	else if(com.find_command(std::string("!weather")) && !v.empty())
+	{
+		std::string s = (v.size() > 1) ? v[1] + "/" + v[0] : v[0];		
+		send("PRIVMSG " + channel + " :" + weather(s));
+	}
 }
 
 void sv::Bot::check_messages(const std::string& user)
@@ -229,4 +235,87 @@ void sv::Bot::check_messages(const std::string& user)
 			msg_relay[user].clear();
 		}
 	}
+}
+
+//from http://www.boost.org/doc/libs/1_54_0/doc/html/boost_asio/example/cpp03/iostreams/http_client.cpp
+//requires api key from http://www.wunderground.com/weather/api/
+std::string sv::Bot::weather(std::string& loc)
+{
+	if(!api_key.empty())
+	{
+		try
+		{
+			boost::asio::ip::tcp::iostream s;
+			s.expires_from_now(boost::posix_time::seconds(60));
+
+			// Establish a connection to the server.
+			s.connect("api.wunderground.com", "http");
+			if (!s)
+			{
+			  std::cout << "Unable to connect: " << s.error().message() << "\n";
+			  return std::string();
+			}
+
+			// ask for the xml file
+			s << "GET " << "/api/" + api_key + "/geolookup/conditions/q/" + loc + ".xml" << " HTTP/1.0\r\n";
+			s << "Host: " << "api.wunderground.com" << "\r\n";
+			s << "Accept: */*\r\n";
+			s << "Connection: close\r\n\r\n";
+
+			// Check that response is OK.
+			std::string http_version;
+			s >> http_version;
+			unsigned int status_code;
+			s >> status_code;
+			std::string status_message;
+			std::getline(s, status_message);
+			if (!s || http_version.substr(0, 5) != "HTTP/")
+			{
+			  std::cout << "Invalid response\n";
+			  return std::string();
+			}
+			if (status_code != 200)
+			{
+			  std::cout << "Response returned with status code " << status_code << "\n";
+			  return std::string();
+			}
+
+			// Process the response headers, which are terminated by a blank line.
+			std::string header;
+			while (std::getline(s, header) && header != "\r")
+			  std::cout << header << "\n";
+			std::cout << "\n";
+
+			// Write the remaining data to output.
+			std::stringstream ss;
+			ss << s.rdbuf();
+
+			using boost::property_tree::ptree;
+			ptree data;
+			read_xml(ss, data);
+			std::string full_loc, weather, temp, humidity, wind, dewpoint, feel;
+			for(auto& a : data.get_child("response.current_observation"))
+			{
+				if(a.first == "display_location")full_loc = a.second.get<std::string>("full");
+				if(a.first == "weather")weather = a.second.data();
+				if(a.first == "temperature_string")temp = a.second.data();
+				if(a.first == "relative_humidity")humidity = a.second.data();
+				if(a.first == "wind_string")wind = a.second.data();
+				if(a.first == "dewpoint_string")dewpoint = a.second.data();
+				if(a.first == "feelslike_string")feel = a.second.data();
+			}
+			return "Current conditions for " + full_loc + " is " + weather + " with temperature of " 
+				+ temp + " with a relative humidity of " + humidity + " Dewpoint is " + dewpoint + " and it feels like " + feel
+				+ " with wind " + wind;
+		}
+		catch (std::exception& e)
+		{
+			std::cout << "Exception: " << e.what() << "\n";
+		}
+	}
+}
+
+void sv::Bot::set_api_key(const std::string& key)
+{
+	api_key = key;
 }

@@ -20,13 +20,14 @@ namespace sv
 		void join(const std::string&);
 		void quit();
 		void listen();
-
+		void set_api_key(const std::string&);
 	private:
 		void handler(Message&);
 		void send(const std::string&);
 		std::string receive();
 		void save_log();
 		void help();
+		std::string weather(std::string&);
 		void handle_bot_commands(Message&);
 		void check_messages(const std::string&);
 
@@ -50,7 +51,7 @@ namespace sv
 		std::map< std::string, std::list
 			<std::tuple<std::string, std::string, bool>>> 
 			msg_relay;
-
+		std::string api_key;
 		static const int MAX_LOG_FILES = 10;
 		static const int MAX_LOG_LENGTH = 3;
 	};	

@@ -26,6 +26,9 @@ int main(int argc, char* argv[])
 		{
 			try
 			{
+				//API key from http://www.wunderground.com/weather/api/
+				//REQUIRED to use weather feature
+				bot.set_api_key("");
 				bot.connect();
 				bot.join(channel);
 				bot.listen();

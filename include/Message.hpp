@@ -10,6 +10,7 @@
 #include <string>
 #include <boost/regex.hpp>
 #include <sstream>
+#include <vector>
 
 namespace sv
 {

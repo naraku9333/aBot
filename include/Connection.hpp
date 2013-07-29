@@ -1,6 +1,7 @@
 #ifndef SV_BOT_CONNECTION_HPP
 #define SV_BOT_CONNECTION_HPP
 #include <boost/asio.hpp>
+#include <array>
 #include <string>
 /**
 	IRCBOT Connection class
