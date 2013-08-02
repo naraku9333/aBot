@@ -240,21 +240,28 @@ std::string sv::Bot::weather(const std::string& loc) const
 		using boost::property_tree::ptree;
 		ptree data;
 		std::string raw = util::get_http_data("api.wunderground.com", "/api/" + api_key + "/geolookup/conditions/q/" + loc + ".xml");
-		read_xml(raw, data);
-		std::string full_loc, weather, temp, humidity, wind, dewpoint, feel;
-		for(auto& a : data.get_child("response.current_observation"))
+		try
 		{
-			if(a.first == "display_location")full_loc = a.second.get<std::string>("full");
-			if(a.first == "weather")weather = a.second.data();
-			if(a.first == "temperature_string")temp = a.second.data();
-			if(a.first == "relative_humidity")humidity = a.second.data();
-			if(a.first == "wind_string")wind = a.second.data();
-			if(a.first == "dewpoint_string")dewpoint = a.second.data();
-			if(a.first == "feelslike_string")feel = a.second.data();
+			read_xml(std::stringstream(raw), data);
+			std::string full_loc, weather, temp, humidity, wind, dewpoint, feel;
+			for(auto& a : data.get_child("response.current_observation"))
+			{
+				if(a.first == "display_location")full_loc = a.second.get<std::string>("full");
+				if(a.first == "weather")weather = a.second.data();
+				if(a.first == "temperature_string")temp = a.second.data();
+				if(a.first == "relative_humidity")humidity = a.second.data();
+				if(a.first == "wind_string")wind = a.second.data();
+				if(a.first == "dewpoint_string")dewpoint = a.second.data();
+				if(a.first == "feelslike_string")feel = a.second.data();
+			}
+			return "Current conditions for " + full_loc + " is " + weather + " with temperature of " 
+				+ temp + " with a relative humidity of " + humidity + " Dewpoint is " + dewpoint + " and it feels like " + feel
+				+ " with wind " + wind;
 		}
-		return "Current conditions for " + full_loc + " is " + weather + " with temperature of " 
-			+ temp + " with a relative humidity of " + humidity + " Dewpoint is " + dewpoint + " and it feels like " + feel
-			+ " with wind " + wind;		
+		catch(std::exception& e)
+		{
+			return e.what();
+		}
 	}
 }
 
