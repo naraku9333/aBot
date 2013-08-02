@@ -29,7 +29,8 @@ An IRC bot to be entered into a cplusplus.com monthly
 - [x] implement command !exit -- shutsdown client after saving chat log data (if any) to disk
 - [x] OPTIONAL implement command !weather [zip] | [city] [state|province|country] *2 letter abbreviation
       get current weather conditions for specified location
-- [ ] OPTIONAL implement command !cowsay --display a cow saying a fortune  http://en.wikipedia.org/wiki/Cowsay
+- [x] OPTIONAL implement command !cowsay --display a cow saying a fortune  http://en.wikipedia.org/wiki/Cowsay
+      Uses I heart quotes API http://iheartquotes.com/api
 
 ####Usage:
     abot <nick> <server> <channel>optional <port>optional
