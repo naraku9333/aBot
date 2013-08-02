@@ -21,15 +21,19 @@ namespace sv
 		void quit();
 		void listen();
 		void set_api_key(const std::string&);
+
 	private:
 		void handler(Message&);
 		void send(const std::string&);
+		void send_priv(const std::string&, const std::string&);
 		std::string receive();
 		void save_log();
 		void help();
-		std::string weather(std::string&);
+		std::string weather(const std::string&) const;
+		void cowsay();
 		void handle_bot_commands(Message&);
 		void check_messages(const std::string&);
+		void send_cow(const std::vector<std::string>&, const int);
 
 		//workaround for VS
 		Bot() : connection("","")/*= delete*/{}
@@ -53,7 +57,7 @@ namespace sv
 			msg_relay;
 		std::string api_key;
 		static const int MAX_LOG_FILES = 10;
-		static const int MAX_LOG_LENGTH = 3;
+		static const int MAX_LOG_LENGTH = 50;
 	};	
 };
 #endif
