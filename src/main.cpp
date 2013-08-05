@@ -20,25 +20,24 @@ int main(int argc, char* argv[])
 		std::string channel = (argc >= 4) ? argv[3] : "##c++";
 		std::string port = (argc >= 5) ? argv[4] : "6667";
 		
-		sv::Bot bot(argv[1], argv[2], port);
-		bool connected(false);
+		//API key from http://www.wunderground.com/weather/api/
+		//REQUIRED to use weather feature
+		std::string api = (argc >= 6) ? argv[5] : "";
+
+		sv::Bot bot(argv[1], argv[2], port, api);
+		//bool connected(false);
 		//while(!connected)
 		{
 			try
-			{
-				//API key from http://www.wunderground.com/weather/api/
-				//REQUIRED to use weather feature
-				bot.set_api_key("");
+			{				
 				bot.connect();
 				bot.join(channel);
 				bot.listen();
-			}catch(std::exception& e)
+			}
+			catch(std::exception& e)
 			{
 				std::cout << e.what() << std::endl;
-				/*std::cout << "Connection failed, attempting again in 5 seconds" << std::endl;
-				boost::this_thread::sleep_for(boost::chrono::seconds(5));*/
 			}
-
 		}	
 	}
 	else
