@@ -42,9 +42,9 @@ Tested with:
 - Visual Studio 2012:
     - Create new project from existing source
 - GCC compile with:
-    - g++ -std=c++11 -Iinclude src/Bot.cpp src/main.cpp -lboost_system -lboost_filesystem -lboost_date_time
+    - g++ -o abot -std=c++11 -Iinclude src/Message.cpp src/Connection.cpp src/Utility.cpp src/Logger.cpp src/Bot.cpp src/main.cpp -lWs2_32 -lboost_system -lboost_filesystem -lboost_date_time -lboost_regex
 - MinGW compile with:
-    - g++ -std=c++11 -Iinclude src/Bot.cpp src/main.cpp -lWs2_32 -lboost_system -lboost_filesystem -lboost_date_time
+    - g++ -o abot -std=c++11 -D_WIN32_WINNT=0x0501 -DWINVER=0x0501 -Iinclude src/Message.cpp src/Connection.cpp src/Utility.cpp src/Logger.cpp src/Bot.cpp src/main.cpp -lWs2_32 -lboost_system -lboost_filesystem -lboost_date_time -lboost_regex
 
 ####Issues:
 
