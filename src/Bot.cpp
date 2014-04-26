@@ -8,8 +8,8 @@
 #include <string>
 
 sv::Bot::Bot(const std::string& n, const std::string& s,
-			 const std::string& p = std::string("6667"), const std::string& api = "")
-			 : nick(n), connection(s,p), exit(false), api_key(api)
+			 const std::string& p = "6667", const std::string& api = "")
+			 : nick(n), server(s), connection(s,p), exit(false), api_key(api)
 {
 	
 }
@@ -23,13 +23,14 @@ void sv::Bot::connect()
 {	
 	connection.connect();
 
-	send("NICK " + nick);
-	send("USER guest 0 * :Ima Robot");	
+    send("NICK " + nick);
+    send("USER " + nick + " 0 " + server + " :Ima Robot");
 }
 
 void sv::Bot::send(const std::string& msg)
 {
 	connection.send(msg);
+	std::cout <<"DBG: " << msg << std::endl;//DBG
 }
 
 void sv::Bot::send_priv(const std::string& msg , const std::string& to)
@@ -45,7 +46,7 @@ std::string sv::Bot::receive()
 }
 
 void sv::Bot::join(const std::string& chan)
-{
+{    
 	if(!chan.empty())
 	{
 		quit();
@@ -65,16 +66,13 @@ void sv::Bot::quit()
 }
 
 void sv::Bot::listen()
-{	
+{	    
 	while(!exit)
 	{
 		std::string s = receive();
-
-		if(s.find("PING") != std::string::npos)
-			send("PONG");
-
-		else
-			handler(Message(s));	
+		std::cout << s << std::endl;//DBG
+	
+		handler(Message(s));	
 	}	
 }
 
@@ -92,8 +90,7 @@ void sv::Bot::handler(Message msg)
 		else if(msg.command == "PART" || msg.command == "QUIT")
 		{						
 			newmsg += "has quit " + channel;
-		}
-		//TODO handle other commands ie: NICK, ACTION, etc..
+		}	
 
 		newmsg += "  " + msg.data;
 		std::cout << msg.sender << channel << newmsg << std::endl;//dbg
@@ -103,55 +100,63 @@ void sv::Bot::handler(Message msg)
 			handle_bot_commands(msg);
 		}
 	}
+    else
+    {        
+        auto it = msg.botcommands.begin();
+        if ((it = std::find(msg.botcommands.begin(), msg.botcommands.end(), "PING")) != msg.botcommands.end())
+        {
+            send("PONG " + *++it);
+        }
+    }
 }
 
 void sv::Bot::help()
 {
-	send_priv("aBot - An IRC bot to be entered into a cplusplus.com monthly community competition http://cppcomp.netne.net/showthread.php?tid=4", channel);
-	send_priv("-- !join <channel>  join the specified channel", channel);
-	send_priv("-- !quit  quit current channel\n", channel);
-	send_priv("-- !exit  shutdown " + nick + "\n", channel);
-	send_priv("-- !tell <private|public> <nick> <message>  Send <message> to <nick> in channel if public or via privmsg if private.", channel);
-	send_priv("-- !cowsay display a fortune told by a cow", channel);
-	if(!api_key.empty())
-		send_priv("-- !weather <zip> | <city> <state|province|country> get current weather conditions", channel);
+	send_priv("\2aBot - An IRC bot to be entered into a cplusplus.com monthly community competition http://cppcomp.netne.net/showthread.php?tid=4 \2", channel);
+	send_priv("-- \2?join <channel>\2  join the specified channel", channel);
+	send_priv("-- \2?quit\2  quit current channel\n", channel);
+	send_priv("-- \2?exit\2  shutdown " + nick + "\n", channel);
+	send_priv("-- \2?tell <private|public> <nick> <message>\2  Send <message> to <nick> in channel if public or via privmsg if private.", channel);
+	send_priv("-- \2?cowsay\2 display a fortune told by a cow", channel);
+    if (!api_key.empty())
+        send_priv("-- \2?weather <zip> | <city> <state|province|country>\2 get current weather conditions", channel);
+    
 }
 
 void sv::Bot::handle_bot_commands(Message& com)
 {	
 	std::vector<std::string> v = com.command_params();
 
-	if(com.find_command(std::string(("!quit"))))
+	if(com.find_command("?quit"))
 	{
 		quit();
 	}
-	else if(com.find_command(std::string("!join")) && v.size() > 0)
+	else if(com.find_command("?join") && v.size() > 0)
 	{				
 		join(v[0]);		
 	}
-	else if(com.find_command(std::string("!tell")) && v.size() > 2)
+	else if(com.find_command("?tell") && v.size() > 2)
 	{
 		std::string temp;//(botcommands.size(),0);
 		std::for_each(v.begin() + 2, v.end(),[&](std::string s){temp += " " + s;});
-		bool b = false;
-		if(v[0] == "private")
-			b = true;
+		
+		bool b = (v[0] == "private");
 		msg_relay[v[1]].push_back(std::make_tuple(com.sender, temp, b));
 	}
-	else if(com.find_command(std::string("!help")))
+	else if(com.find_command("?help"))
 	{
 		help();
 	}
-	else if(com.find_command(std::string(("!exit"))))
+	else if(com.find_command("?exit"))
 	{
 		exit = true;
 	}
-	else if(com.find_command(std::string("!weather")) && !v.empty())
+	else if(com.find_command("?weather") && !v.empty())
 	{
 		std::string s = (v.size() > 1) ? v[1] + "/" + v[0] : v[0];		
 		send_priv( util::weather(s, api_key), channel);
 	}
-	else if(com.find_command(std::string(("!cowsay"))))
+	else if(com.find_command("?cowsay"))
 	{
 		send_cow();
 	}
@@ -184,7 +189,7 @@ void sv::Bot::send_cow()
 	send_priv(" " + std::string(w + pad,'_'), channel);
 	for(auto& a : data)
 	{		
-		send_priv("| " + a + ((a.size() < w) ? std::string(w - a.size(), ' ') : std::string()) + "|", channel);
+		send_priv("| " + a + ((a.size() < w) ? std::string(w - a.size(), ' ') : "") + "|", channel);
 	}
 	send_priv(" " + std::string(w + pad,'-'), channel);
 	send_priv("     \\  ^__^", channel);

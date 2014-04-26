@@ -11,13 +11,14 @@
 
 #include "Bot.hpp"
 #include <iostream>
-#include <boost/thread.hpp>
+#include <thread>
+#include <chrono>
 
 int main(int argc, char* argv[])
 {
 	if(argc >= 3)		
 	{
-		std::string channel = (argc >= 4) ? argv[3] : "##c++";
+		std::string channel = (argc >= 4) ? argv[3] : "#abot_test";
 		std::string port = (argc >= 5) ? argv[4] : "6667";
 		
 		//API key from http://www.wunderground.com/weather/api/
@@ -25,21 +26,24 @@ int main(int argc, char* argv[])
 		std::string api = (argc >= 6) ? argv[5] : "";
 
 		sv::Bot bot(argv[1], argv[2], port, api);
-		//bool connected(false);
-		//while(!connected)
+		
+		try
 		{
-			try
-			{				
-				bot.connect();
-				bot.join(channel);
-				bot.listen();
-			}
-			catch(std::exception& e)
-			{
-				std::cout << e.what() << std::endl;
-			}
-		}	
-	}
+			using namespace std::chrono;
+
+			bot.connect();
+			std::thread t(&sv::Bot::listen, std::ref(bot));
+
+            std::this_thread::sleep_for(seconds(10));
+           
+			bot.join(channel);
+			t.join();
+		}
+		catch(std::exception& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}	
 	else
 		std::cout << "USAGE:\nRun with:  abot <nick> <server> <channel>optional <port>optional" << std::endl;
 }

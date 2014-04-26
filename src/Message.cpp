@@ -1,4 +1,6 @@
 #include <Message.hpp>
+#include <iterator>
+#include <algorithm>
 
 sv::Message::Message(const std::string& msg) //: sender(), command(), params(), data()
 {
@@ -16,16 +18,18 @@ sv::Message::Message(const std::string& msg) //: sender(), command(), params(), 
 		params  = match[4];
 		data    = match[6];
 	}
-	else
-		sender = "SERVER";
+    else
+    {
+        sender = "SERVER";
+        data = msg;
+    }
 
 	std::stringstream ss(data);
-	std::string  tempstr;
-	while(ss >> tempstr)
-		botcommands.push_back(tempstr);
+	
+    std::copy(std::istream_iterator<std::string>(ss), std::istream_iterator<std::string>(), std::back_inserter(botcommands));
 }
 
-bool sv::Message::find_command(std::string& com)
+bool sv::Message::find_command(const std::string com)
 {
 	if(!botcommands.empty())
 	{

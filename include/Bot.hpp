@@ -6,12 +6,14 @@
 #include <Connection.hpp>
 #include <Logger.hpp>
 #include <boost/noncopyable.hpp>
+#include <atomic>
 
 namespace sv
 {
 	class Bot : boost::noncopyable
 	{
 	public:
+		Bot() = delete;
 		Bot(const std::string&, const std::string&, const std::string&, const std::string&);
 		~Bot();
 
@@ -30,11 +32,8 @@ namespace sv
 		void check_messages(const std::string&);
 		void send_cow();
 
-		//workaround for VS
-		Bot() : connection("","")/*= delete*/{}
-
 		std::string nick,
-			channel;
+			channel, server;
 		Connection connection;
 		bool exit;
 		log::Logger log;

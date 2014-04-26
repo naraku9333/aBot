@@ -22,7 +22,7 @@ namespace sv
 
 		explicit Message(const std::string& msg);
 
-		bool find_command(std::string& com);
+		bool find_command(const std::string com);
 
 		std::vector<std::string> command_params();
 	};
