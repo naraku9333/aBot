@@ -1,8 +1,7 @@
 aBot
 ====
 
-An IRC bot to be entered into a cplusplus.com monthly 
-[community competition] (http://cppcomp.netne.net/showthread.php?tid=4)
+An IRC bot written for a cplusplus.com community competition.
 
 ####Dependencies:
 
