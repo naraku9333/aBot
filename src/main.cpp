@@ -25,7 +25,9 @@ int main(int argc, char* argv[])
 		//REQUIRED to use weather feature
 		std::string api = (argc >= 6) ? argv[5] : "";
 
-		sv::Bot bot(argv[1], argv[2], port, api);
+        std::string owner = (argc >= 7) ? argv[6] : "";
+
+		sv::Bot bot(argv[1], argv[2], port, api, owner);
 		
 		try
 		{
@@ -45,5 +47,6 @@ int main(int argc, char* argv[])
 		}
 	}	
 	else
-		std::cout << "USAGE:\nRun with:  abot <nick> <server> <channel>optional <port>optional" << std::endl;
+		std::cout << "USAGE:\nRun with:  abot <nick> <server> <channel>optional <port>optional "
+                  << "<weather api key> optional <owner>optional" << std::endl;
 }

@@ -14,7 +14,7 @@ namespace sv
 	{
 	public:
 		Bot() = delete;
-		Bot(const std::string&, const std::string&, const std::string&, const std::string&);
+		Bot(const std::string&, const std::string&, const std::string&, const std::string&, const std::string&);
 		~Bot();
 
 		void connect();//
@@ -46,6 +46,9 @@ namespace sv
 		std::map< std::string, std::list
 			<std::tuple<std::string, std::string, bool>>> 
 			msg_relay;		
+
+        //bot owner - me!
+        std::string owner;
 	};	
 };
 #endif

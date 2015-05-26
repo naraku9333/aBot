@@ -9,7 +9,7 @@ std::string sv::util::time_string()
 	return s.substr(0, s.length() - 3);//remove trailing crlf
 }
 
-std::string get_http_data(const std::string& server, const std::string& file)
+std::string sv::util::get_http_data(const std::string& server, const std::string& file)
 {
     try
     {

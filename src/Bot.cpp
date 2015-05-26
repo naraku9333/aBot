@@ -8,10 +8,10 @@
 #include <string>
 
 sv::Bot::Bot(const std::string& n, const std::string& s,
-			 const std::string& p = "6667", const std::string& api = "")
+    const std::string& p = "6667", const std::string& api = "", const std::string& o = "")
 			 : nick(n), server(s), connection(s,p), exit(false), api_key(api)
 {
-	
+    if (!o.empty()) owner = o;
 }
 
 sv::Bot::~Bot()
@@ -126,14 +126,30 @@ void sv::Bot::help()
 void sv::Bot::handle_bot_commands(Message& com)
 {	
 	std::vector<std::string> v = com.command_params();
-
+   
 	if(com.find_command("?quit"))
 	{
-		quit();
+        if (com.sender == owner)
+        {
+            quit();
+        }
+        else send_priv("You are not authorized to run that command!", channel);
 	}
 	else if(com.find_command("?join") && v.size() > 0)
 	{				
-		join(v[0]);		
+        if (com.sender == owner)
+        {
+            join(v[0]);
+        }
+        else send_priv("You are not authorized to run that command!", channel);
+	}
+    else if(com.find_command("?exit"))
+	{		
+        if (com.sender == owner)
+        {
+            exit = true;
+        }
+        else send_priv("You are not authorized to run that command!", channel);
 	}
 	else if(com.find_command("?tell") && v.size() > 2)
 	{
@@ -147,10 +163,7 @@ void sv::Bot::handle_bot_commands(Message& com)
 	{
 		help();
 	}
-	else if(com.find_command("?exit"))
-	{
-		exit = true;
-	}
+	
 	else if(com.find_command("?weather") && !v.empty())
 	{
 		std::string s = (v.size() > 1) ? v[1] + "/" + v[0] : v[0];		
